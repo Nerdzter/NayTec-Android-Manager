@@ -1,6 +1,7 @@
 import subprocess
-import os
 import re
+from PIL import Image, ImageChops
+import io
 
 class DeviceModel:
 
@@ -79,14 +80,29 @@ class DeviceModel:
         except:
             return "N/D"
 
-    # === SCREENSHOT ===
+    # === CAPTURA DE TELA (otimizada) ===
     @staticmethod
-    def capture_screen(path="resources/icons/screen.png"):
+    def capture_screen(path="resources/icons/screen.png", size=(200, 400)):
         try:
-            output = subprocess.check_output(["adb", "exec-out", "screencap", "-p"])
-            with open(path, "wb") as f:
-                f.write(output)
+            # Captura via adb
+            raw = subprocess.check_output(["adb", "exec-out", "screencap", "-p"])
+
+            # Abre imagem
+            img = Image.open(io.BytesIO(raw))
+
+            # Remove bordas pretas automáticas
+            bg = Image.new(img.mode, img.size, img.getpixel((0, 0)))
+            diff = ImageChops.difference(img, bg)
+            bbox = diff.getbbox()
+            if bbox:
+                img = img.crop(bbox)
+
+            # Redimensiona para caber no painel
+            img = img.resize(size, Image.LANCZOS)
+
+            # Salva otimizado
+            img.save(path, format='PNG', optimize=True)
             return path
         except Exception as e:
-            print(f"Erro ao capturar tela: {e}")
+            print(f"Erro ao capturar imagem otimizada: {e}")
             return None

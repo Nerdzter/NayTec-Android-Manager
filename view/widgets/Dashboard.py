@@ -15,43 +15,62 @@ class Dashboard(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
 
-        # Dispositivo
+        # Informações do dispositivo
         self.device_label = QLabel("🔌 Verificando dispositivo...")
         self.device_label.setStyleSheet("font-size: 16px; font-weight: 600;")
         main_layout.addWidget(self.device_label, alignment=Qt.AlignCenter)
 
-        # GRID layout para organizar tudo ao redor da tela central
+        # Grade geral com cartões e tela
         grid = QGridLayout()
         grid.setSpacing(20)
 
-        # Cartões de status
+        # Cartões
         self.cards = {}
         sections = ["CPU", "RAM", "Armazenamento", "Bateria"]
-
         positions = [(0, 0), (0, 2), (1, 0), (1, 2)]
         for title, pos in zip(sections, positions):
             card = self.create_card(title)
             grid.addWidget(card, *pos)
             self.cards[title] = card.findChild(QLabel, "value")
 
-        # Miniatura central da tela do celular
+        # === Tela central do celular ===
+        screen_container = QVBoxLayout()
+
         self.screen_label = QLabel()
         self.screen_label.setFixedSize(200, 400)
-        self.screen_label.setStyleSheet("border: 3px solid #8A2BE2; border-radius: 12px;")
-        grid.addWidget(self.screen_label, 0, 1, 2, 1, alignment=Qt.AlignCenter)
+        self.screen_label.setStyleSheet("""
+            border-radius: 12px;
+            background-color: #000;
+            padding: 2px;
+        """)
+        screen_container.addWidget(self.screen_label, alignment=Qt.AlignCenter)
+
+        # Informativo
+        screen_info = QLabel("🕒 A imagem é atualizada automaticamente a cada 30 segundos.")
+        screen_info.setStyleSheet("color: #B0B0B0; font-size: 12px;")
+        screen_container.addWidget(screen_info, alignment=Qt.AlignCenter)
+
+        grid.addLayout(screen_container, 0, 1, 2, 1, alignment=Qt.AlignCenter)
 
         main_layout.addLayout(grid)
 
-        # Botão de captura
-        self.capture_btn = QPushButton("📸 Capturar Tela")
+        # Botão de captura manual
+        btn_layout = QHBoxLayout()
+        self.capture_btn = QPushButton("📸 Capturar Agora")
         self.capture_btn.setFixedWidth(180)
         self.capture_btn.clicked.connect(self.update_screen)
-        main_layout.addWidget(self.capture_btn, alignment=Qt.AlignCenter)
+        btn_layout.addWidget(self.capture_btn, alignment=Qt.AlignCenter)
+        main_layout.addLayout(btn_layout)
 
-        # Timer
+        # Timer de dados
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_data)
         self.timer.start(4000)
+
+        # Timer da tela
+        self.screen_timer = QTimer()
+        self.screen_timer.timeout.connect(self.update_screen)
+        self.screen_timer.start(30000)
 
         self.update_data()
 
@@ -83,28 +102,23 @@ class Dashboard(QWidget):
 
     def update_data(self):
         if not DeviceModel.is_connected():
-            self.device_label.setText("🚫 Nenhum dispositivo encontrado via ADB")
+            self.device_label.setText("🚫 Nenhum dispositivo conectado")
             for lbl in self.cards.values():
                 lbl.setText("Desconectado")
             self.screen_label.clear()
             return
 
-        # Dispositivo
         info = DeviceModel.get_device_info()
         self.device_label.setText(f"📱 {info['model']} | Android {info['android']} | Codinome: {info['device']}")
-
-        # Cartões com dados interpretáveis
         self.cards["CPU"].setText(DeviceModel.get_cpu_human())
         self.cards["RAM"].setText(DeviceModel.get_ram_human())
         self.cards["Armazenamento"].setText(DeviceModel.get_storage_human())
         self.cards["Bateria"].setText(DeviceModel.get_battery_human())
 
-        self.update_screen()
-
     def update_screen(self):
         path = DeviceModel.capture_screen()
         if path:
             pixmap = QPixmap(path).scaled(
-                self.screen_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+                self.screen_label.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
             )
             self.screen_label.setPixmap(pixmap)
