@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget
 from view.widgets.Sidebar import Sidebar
 from view.widgets.Header import Header
+from view.widgets.Dashboard import Dashboard
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -34,6 +35,7 @@ class MainWindow(QMainWindow):
         # Stack de páginas centrais
         self.stack = QStackedWidget()
         content_layout.addWidget(self.stack)
+        self.stack.addWidget(Dashboard())  
 
         # Conectar navegação
         self.sidebar.page_changed.connect(self.change_page)
