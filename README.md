@@ -1,0 +1,1 @@
+# NayTec-Android-Manager
