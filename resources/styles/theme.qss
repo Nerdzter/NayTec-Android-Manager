@@ -1,0 +1,70 @@
+/* === Tema Principal === */
+* {
+    font-family: 'Segoe UI', 'SF Pro', sans-serif;
+    font-size: 14px;
+    color: #FFFFFF;
+    background: transparent;
+}
+
+/* Fundo da Janela */
+QMainWindow {
+    background-color: #121212;
+}
+
+/* Sidebar */
+#Sidebar {
+    background-color: #121212;
+    border-right: 1px solid #1E1E1E;
+}
+
+/* Botões da Sidebar */
+#SidebarButton {
+    color: #B0B0B0;
+    border: none;
+    font-size: 20px;
+    padding: 20px 0;
+}
+
+#SidebarButton:hover {
+    color: #00BFFF;
+}
+
+#SidebarButton:checked {
+    color: #00BFFF;
+    background-color: #1E1E1E;
+    border-right: 4px solid #00BFFF;
+}
+
+/* Header */
+#Header {
+    background-color: #1E1E1E;
+    border-bottom: 1px solid #2A2A2A;
+}
+
+QPushButton#HeaderButton {
+    border: none;
+    padding: 5px;
+    margin: 0 6px;
+}
+
+QPushButton#HeaderButton:hover {
+    background-color: #2A2A2A;
+    border-radius: 6px;
+}
+
+
+#Header {
+    background-color: #1E1E1E;
+    border-bottom: 1px solid #2A2A2A;
+}
+
+QPushButton#HeaderButton {
+    border: none;
+    color: #B0B0B0;
+    font-size: 16px;
+}
+
+QPushButton#HeaderButton:hover {
+    background-color: #2A2A2A;
+    border-radius: 6px;
+}
