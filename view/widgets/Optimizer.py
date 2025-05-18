@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (
     QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QSlider,
     QMessageBox, QScrollArea, QFrame, QCheckBox, QSpacerItem, QSizePolicy
 )
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 import subprocess
 import re
 
@@ -10,18 +10,20 @@ class Optimizer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("Optimizer")
+        self.setWindowFlags(Qt.FramelessWindowHint)  # Remove barra de título
+        self.setStyleSheet("background-color: #121212;")
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(30)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        # === LEFT PANEL ===
-        left_panel = QVBoxLayout()
-        left_panel.setSpacing(25)
-
-        title = QLabel("Otimização do Sistema")
-        title.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 10px;")
-        left_panel.addWidget(title)
+        # === LEFT PANEL (oculto parcial com menor largura) ===
+        left_wrapper = QFrame()
+        left_wrapper.setFixedWidth(240)
+        left_wrapper.setStyleSheet("background-color: #1C1C1E;")
+        left_panel = QVBoxLayout(left_wrapper)
+        left_panel.setContentsMargins(20, 20, 20, 20)
+        left_panel.setSpacing(15)
 
         # Limpeza
         left_panel.addWidget(self.section_label("Limpeza"))
@@ -44,17 +46,18 @@ class Optimizer(QWidget):
         self.slider.valueChanged.connect(self.update_slider_label)
         self.slider.setStyleSheet("""
             QSlider::groove:horizontal {
-                border: 1px solid #444;
+                border: none;
                 height: 10px;
-                background: #2A2A2E;
+                background: #333;
                 border-radius: 5px;
             }
             QSlider::handle:horizontal {
                 background: qlineargradient(spread:pad, x1:0, y1:0.5, x2:1, y2:0.5, stop:0 #00BFFF, stop:1 #0050A0);
                 border: 1px solid #00BFFF;
-                width: 18px;
-                margin: -4px 0;
-                border-radius: 9px;
+                width: 14px;
+                height: 14px;
+                margin: -5px 0;
+                border-radius: 7px;
             }
         """)
         slider_layout.addWidget(self.slider)
@@ -71,10 +74,11 @@ class Optimizer(QWidget):
         left_panel.addWidget(self.wrap_shadow(self.btn_reboot))
 
         left_panel.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        layout.addLayout(left_panel, 1)
+        layout.addWidget(left_wrapper)
 
         # === RIGHT PANEL ===
         right_panel = QVBoxLayout()
+        right_panel.setContentsMargins(40, 20, 40, 20)
         right_panel.setSpacing(15)
 
         app_title = QLabel("Aplicativos Instalados")
@@ -136,7 +140,7 @@ class Optimizer(QWidget):
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(widget)
-        frame.setStyleSheet("box-shadow: 0 0 12px #00BFFF20;")
+        frame.setStyleSheet("background-color: transparent; border: none;")
         return frame
 
     def run_adb(self, cmd):
