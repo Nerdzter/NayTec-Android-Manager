@@ -10,17 +10,16 @@ class Optimizer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("Optimizer")
-        self.setWindowFlags(Qt.FramelessWindowHint)  # Remove barra de título
-        self.setStyleSheet("background-color: #121212;")
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setStyleSheet("background-color: #181818; border-radius: 12px;")
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # === LEFT PANEL (oculto parcial com menor largura) ===
+        # === LEFT PANEL (responsive) ===
         left_wrapper = QFrame()
-        left_wrapper.setFixedWidth(240)
-        left_wrapper.setStyleSheet("background-color: #1C1C1E;")
+        left_wrapper.setStyleSheet("background-color: #1C1C1E; border-right: 1px solid #2C2C2E;")
         left_panel = QVBoxLayout(left_wrapper)
         left_panel.setContentsMargins(20, 20, 20, 20)
         left_panel.setSpacing(15)
@@ -29,15 +28,14 @@ class Optimizer(QWidget):
         left_panel.addWidget(self.section_label("Limpeza"))
         self.btn_cache = self.create_button("Limpar Cache", self.clean_cache)
         self.btn_close_apps = self.create_button("Fechar Apps em Segundo Plano", self.close_background_apps)
-        left_panel.addWidget(self.wrap_shadow(self.btn_cache))
-        left_panel.addWidget(self.wrap_shadow(self.btn_close_apps))
+        left_panel.addWidget(self.btn_cache)
+        left_panel.addWidget(self.btn_close_apps)
 
         # Gerenciamento
         left_panel.addWidget(self.section_label("Gerenciamento"))
-        slider_layout = QVBoxLayout()
         self.slider_label = QLabel("Processos: 2")
         self.slider_label.setStyleSheet("color: #FFFFFF; font-size: 14px;")
-        slider_layout.addWidget(self.slider_label)
+        left_panel.addWidget(self.slider_label)
 
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(1)
@@ -46,39 +44,36 @@ class Optimizer(QWidget):
         self.slider.valueChanged.connect(self.update_slider_label)
         self.slider.setStyleSheet("""
             QSlider::groove:horizontal {
-                border: none;
                 height: 10px;
-                background: #333;
+                background: #3A3A3C;
                 border-radius: 5px;
             }
             QSlider::handle:horizontal {
-                background: qlineargradient(spread:pad, x1:0, y1:0.5, x2:1, y2:0.5, stop:0 #00BFFF, stop:1 #0050A0);
-                border: 1px solid #00BFFF;
-                width: 14px;
-                height: 14px;
+                background: #00BFFF;
+                width: 16px;
+                height: 16px;
                 margin: -5px 0;
-                border-radius: 7px;
+                border-radius: 8px;
             }
         """)
-        slider_layout.addWidget(self.slider)
-        left_panel.addLayout(slider_layout)
+        left_panel.addWidget(self.slider)
 
         self.btn_set_process_limit = self.create_button("Aplicar Limite de Processos", self.limit_background_processes)
-        left_panel.addWidget(self.wrap_shadow(self.btn_set_process_limit))
+        left_panel.addWidget(self.btn_set_process_limit)
 
         # Segurança
         left_panel.addWidget(self.section_label("Segurança"))
         self.btn_security = self.create_button("Analisar Segurança", self.analyze_security)
         self.btn_reboot = self.create_button("Reiniciar Dispositivo", self.reboot_device)
-        left_panel.addWidget(self.wrap_shadow(self.btn_security))
-        left_panel.addWidget(self.wrap_shadow(self.btn_reboot))
+        left_panel.addWidget(self.btn_security)
+        left_panel.addWidget(self.btn_reboot)
 
         left_panel.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
         layout.addWidget(left_wrapper)
 
         # === RIGHT PANEL ===
         right_panel = QVBoxLayout()
-        right_panel.setContentsMargins(40, 20, 40, 20)
+        right_panel.setContentsMargins(30, 20, 30, 20)
         right_panel.setSpacing(15)
 
         app_title = QLabel("Aplicativos Instalados")
@@ -87,7 +82,7 @@ class Optimizer(QWidget):
 
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
-        self.scroll.setStyleSheet("background-color: #1C1C1E; border: none;")
+        self.scroll.setStyleSheet("background-color: #181818; border: none;")
         self.apps_container = QWidget()
         self.apps_layout = QVBoxLayout(self.apps_container)
         self.apps_layout.setSpacing(10)
@@ -95,9 +90,9 @@ class Optimizer(QWidget):
         right_panel.addWidget(self.scroll, 1)
 
         uninstall_all_btn = QPushButton("Desinstalar Selecionados")
-        uninstall_all_btn.setStyleSheet("background-color: #444; color: white; border-radius: 10px; padding: 10px; font-weight: bold;")
+        uninstall_all_btn.setStyleSheet("background-color: #3A3A3C; color: white; border-radius: 10px; padding: 10px; font-weight: bold;")
         uninstall_all_btn.clicked.connect(self.uninstall_selected_apps)
-        right_panel.addWidget(self.wrap_shadow(uninstall_all_btn))
+        right_panel.addWidget(uninstall_all_btn)
 
         self.status = QLabel("")
         self.status.setStyleSheet("font-size: 13px; color: #B0B0B0; margin-top: 10px;")
@@ -122,8 +117,8 @@ class Optimizer(QWidget):
             QPushButton {
                 background-color: #2A2A2E;
                 color: white;
-                border: 1px solid #3A3A3C;
-                padding: 10px;
+                border: none;
+                padding: 10px 16px;
                 border-radius: 12px;
                 font-size: 14px;
                 font-weight: 500;
@@ -134,14 +129,6 @@ class Optimizer(QWidget):
         """)
         btn.clicked.connect(action)
         return btn
-
-    def wrap_shadow(self, widget):
-        frame = QFrame()
-        layout = QVBoxLayout(frame)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(widget)
-        frame.setStyleSheet("background-color: transparent; border: none;")
-        return frame
 
     def run_adb(self, cmd):
         try:

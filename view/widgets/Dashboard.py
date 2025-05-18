@@ -46,7 +46,7 @@ class Dashboard(QWidget):
         screen_container.addWidget(self.screen_label, alignment=Qt.AlignCenter)
 
         # Informativo
-        screen_info = QLabel("🕒 A imagem é atualizada automaticamente a cada 30 segundos.")
+        screen_info = QLabel("🕒 A imagem é atualizada automaticamente a cada 10 segundos.")
         screen_info.setStyleSheet("color: #B0B0B0; font-size: 12px;")
         screen_container.addWidget(screen_info, alignment=Qt.AlignCenter)
 
@@ -70,7 +70,7 @@ class Dashboard(QWidget):
         # Timer da tela
         self.screen_timer = QTimer()
         self.screen_timer.timeout.connect(self.update_screen)
-        self.screen_timer.start(30000)
+        self.screen_timer.start(10000)
 
         self.update_data()
 

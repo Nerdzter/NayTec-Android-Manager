@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget
+from PyQt5.QtCore import Qt
 from view.widgets.Sidebar import Sidebar
 from view.widgets.Header import Header
 from view.widgets.Dashboard import Dashboard
 from view.widgets.Optimizer import Optimizer
+from view.widgets.Antivirus import Antivirus
 
 
 class MainWindow(QMainWindow):
@@ -10,6 +12,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("NayTec Android Manager")
         self.setMinimumSize(1200, 720)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         # Widget central
         central_widget = QWidget()
@@ -38,18 +41,11 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         content_layout.addWidget(self.stack)
         self.stack.addWidget(Dashboard()) 
-        self.stack.addWidget(Optimizer())   
+        self.stack.addWidget(Optimizer())  
+        self.stack.addWidget(Antivirus())
 
         # Conectar navegação
         self.sidebar.page_changed.connect(self.change_page)
-
-        # Placeholder temporário (até adicionarmos as páginas)
-        # from PyQt5.QtWidgets import QLabel
-        # self.stack.addWidget(QLabel("Dashboard"))
-        # self.stack.addWidget(QLabel("Otimização"))
-        # self.stack.addWidget(QLabel("Antivírus"))
-        # self.stack.addWidget(QLabel("Desempenho"))
-        # self.stack.addWidget(QLabel("Configurações"))
 
     def change_page(self, index):
         self.stack.setCurrentIndex(index)
