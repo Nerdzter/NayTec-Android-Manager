@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import (
-    QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QMessageBox, QSlider
+    QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QSlider,
+    QMessageBox, QScrollArea, QFrame, QCheckBox
 )
 from PyQt5.QtCore import Qt
 import subprocess
+import re
 
 
 class Optimizer(QWidget):
@@ -10,112 +12,168 @@ class Optimizer(QWidget):
         super().__init__(parent)
         self.setObjectName("Optimizer")
 
-        layout = QVBoxLayout(self)
+        layout = QHBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(20)
 
-        title = QLabel("🧼 Otimização do Sistema")
-        title.setStyleSheet("font-size: 24px; font-weight: 600;")
-        layout.addWidget(title)
+        # Lado esquerdo - botões de otimização
+        left_panel = QVBoxLayout()
+        left_panel.setSpacing(15)
 
-        # Limpar Cache
-        self.btn_cache = self.create_button("🧹 Limpar Cache", "#00BFFF")
-        self.btn_cache.clicked.connect(self.clean_cache)
-        layout.addWidget(self.btn_cache)
+        title = QLabel("\ud83e\ude9c Otimização do Sistema")
+        title.setStyleSheet("font-size: 24px; font-weight: 600; color: #FFFFFF;")
+        left_panel.addWidget(title)
 
-        # Fechar Apps
-        self.btn_close_apps = self.create_button("🛑 Fechar Apps em Segundo Plano", "#00FF7F")
-        self.btn_close_apps.clicked.connect(self.close_background_apps)
-        layout.addWidget(self.btn_close_apps)
+        self.btn_cache = self.create_button("\ud83e\ude9c Limpar Cache", "#00BFFF", self.clean_cache)
+        self.btn_close_apps = self.create_button("\u274c Fechar Apps em Segundo Plano", "#00FF7F", self.close_background_apps)
+        self.btn_set_process_limit = self.create_button("Aplicar Limite de Processos", "#8A2BE2", self.limit_background_processes)
+        self.btn_security = self.create_button("\ud83d\udee1\ufe0f Analisar Segurança", "#FF4500", self.analyze_security)
+        self.btn_reboot = self.create_button("\ud83d\udd04 Reiniciar Dispositivo", "#FF6347", self.reboot_device)
 
-        # Limitar Processos
-        label_slider = QLabel("🔧 Limitar Processos em Segundo Plano")
-        label_slider.setStyleSheet("font-size: 16px; font-weight: 500;")
-        layout.addWidget(label_slider)
-
+        # Slider de limite de processos
+        left_panel.addWidget(QLabel("\u2692\ufe0f Limitar Processos em Segundo Plano", self, styleSheet="font-size: 16px; color: #FFFFFF;"))
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(1)
         self.slider.setMaximum(4)
         self.slider.setValue(2)
         self.slider.setStyleSheet("color: #8A2BE2;")
-        layout.addWidget(self.slider)
+        left_panel.addWidget(self.slider)
 
-        self.btn_set_process_limit = self.create_button("Aplicar Limite de Processos", "#8A2BE2")
-        self.btn_set_process_limit.clicked.connect(self.limit_background_processes)
-        layout.addWidget(self.btn_set_process_limit)
+        # Adiciona os botões
+        for btn in [self.btn_cache, self.btn_close_apps, self.btn_set_process_limit, self.btn_security, self.btn_reboot]:
+            left_panel.addWidget(btn)
 
-        # Análise de segurança
-        self.btn_security = self.create_button("🛡️ Analisar Segurança", "#FF4500")
-        self.btn_security.clicked.connect(self.analyze_security)
-        layout.addWidget(self.btn_security)
+        layout.addLayout(left_panel, 1)
 
-        # Reiniciar Dispositivo
-        self.btn_reboot = self.create_button("🔄 Reiniciar Dispositivo", "#FF6347")
-        self.btn_reboot.clicked.connect(self.reboot_device)
-        layout.addWidget(self.btn_reboot)
+        # Lado direito - lista de apps
+        right_panel = QVBoxLayout()
 
-        # Mensagem de status
+        app_title = QLabel("\ud83d\udcf1 Aplicativos Instalados")
+        app_title.setStyleSheet("font-size: 18px; font-weight: 500; color: #FFFFFF;")
+        right_panel.addWidget(app_title)
+
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("background-color: #1E1E1E; border: none;")
+        self.apps_container = QWidget()
+        self.apps_layout = QVBoxLayout(self.apps_container)
+        self.scroll.setWidget(self.apps_container)
+        right_panel.addWidget(self.scroll, 1)
+
+        uninstall_all_btn = QPushButton("\ud83d\uddd1\ufe0f Desinstalar Selecionados")
+        uninstall_all_btn.setStyleSheet("background-color: #DC143C; color: white; font-weight: bold; border-radius: 8px; padding: 8px;")
+        uninstall_all_btn.clicked.connect(self.uninstall_selected_apps)
+        right_panel.addWidget(uninstall_all_btn)
+
+        layout.addLayout(right_panel, 2)
+
         self.status = QLabel("")
         self.status.setStyleSheet("font-size: 14px; color: #B0B0B0;")
         layout.addWidget(self.status)
 
-    def create_button(self, text, color):
+        self.apps_checkboxes = []
+        self.load_apps()
+
+    def create_button(self, text, color, action):
         btn = QPushButton(text)
         btn.setFixedSize(260, 50)
         btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {color};
                 color: #121212;
-                border: none;
                 font-size: 15px;
                 font-weight: bold;
+                border: none;
                 border-radius: 10px;
             }}
             QPushButton:hover {{
                 opacity: 0.85;
             }}
         """)
+        btn.clicked.connect(action)
         return btn
 
     def run_adb(self, cmd):
         try:
-            output = subprocess.check_output(["adb", "shell"] + cmd.split(), encoding='utf-8')
+            output = subprocess.check_output(["adb", "shell"] + cmd.split(), encoding="utf-8")
             return output.strip()
         except Exception as e:
             return f"Erro: {e}"
 
     def clean_cache(self):
-        self.status.setText("🧹 Limpando cache...")
+        self.status.setText("\ud83e\ude9c Limpando cache...")
         result = self.run_adb("pm trim-caches 9999999999")
-        self.status.setText("✅ Cache limpo com sucesso!" if "Erro" not in result else result)
+        self.status.setText("\u2705 Cache limpo!" if "Erro" not in result else result)
 
     def close_background_apps(self):
-        self.status.setText("🛑 Fechando aplicativos em segundo plano...")
+        self.status.setText("\u274c Fechando apps...")
         result = self.run_adb("am kill-all")
-        self.status.setText("✅ Aplicativos fechados." if "Erro" not in result else result)
+        self.status.setText("\u2705 Apps fechados." if "Erro" not in result else result)
 
     def limit_background_processes(self):
-        limit = str(self.slider.value())
-        self.status.setText(f"🔧 Limitando processos para {limit}...")
-        result = self.run_adb(f"settings put global max_background_processes {limit}")
-        self.status.setText("✅ Limite aplicado com sucesso." if "Erro" not in result else result)
+        val = self.slider.value()
+        result = self.run_adb(f"settings put global max_background_processes {val}")
+        self.status.setText("\u2705 Limite aplicado." if "Erro" not in result else result)
 
     def analyze_security(self):
-        self.status.setText("🛡️ Analisando aplicativos desativados...")
+        self.status.setText("\ud83d\udee1\ufe0f Analisando apps...")
         result = self.run_adb("pm list packages -d")
         if result:
             QMessageBox.information(self, "Apps Desativados", result)
         else:
-            QMessageBox.information(self, "Seguro", "Nenhum app desativado detectado.")
-        self.status.setText("✅ Análise concluída.")
+            QMessageBox.information(self, "Seguro", "Nenhum app desativado.")
+        self.status.setText("\u2705 Análise concluída.")
 
     def reboot_device(self):
-        reply = QMessageBox.question(
-            self,
-            "Confirmar Reinício",
-            "Tem certeza que deseja reiniciar o dispositivo?",
-            QMessageBox.Yes | QMessageBox.No
-        )
+        reply = QMessageBox.question(self, "Confirmar", "Reiniciar dispositivo?", QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            self.status.setText("🔄 Reiniciando...")
+            self.status.setText("\ud83d\udd04 Reiniciando...")
             self.run_adb("reboot")
+
+    def load_apps(self):
+        self.status.setText("\ud83d\udce6 Carregando apps...")
+        try:
+            packages_output = subprocess.check_output(
+                ["adb", "shell", "pm", "list", "packages", "-3"], encoding="utf-8"
+            )
+            packages = [line.replace("package:", "").strip() for line in packages_output.splitlines()]
+            self.apps_checkboxes.clear()
+
+            for pkg in packages:
+                try:
+                    label_output = subprocess.check_output(
+                        ["adb", "shell", "dumpsys", "package", pkg], encoding="utf-8"
+                    )
+                    match = re.search(r"application-label:'([^']+)'", label_output)
+                    label = match.group(1) if match else pkg
+                except:
+                    label = pkg
+
+                cb = QCheckBox(label)
+                cb.setObjectName(pkg)
+                cb.setStyleSheet("color: #FFFFFF; font-size: 14px;")
+                self.apps_checkboxes.append(cb)
+                self.apps_layout.addWidget(cb)
+
+            self.status.setText(f"\ud83d\udcc4 {len(packages)} apps carregados.")
+
+        except Exception as e:
+            self.status.setText(f"Erro: {e}")
+
+    def uninstall_selected_apps(self):
+        selected = [cb for cb in self.apps_checkboxes if cb.isChecked()]
+        if not selected:
+            QMessageBox.information(self, "Nada selecionado", "Selecione ao menos um app para desinstalar.")
+            return
+
+        confirm = QMessageBox.question(
+            self, "Confirmar", f"Deseja remover {len(selected)} apps?", QMessageBox.Yes | QMessageBox.No
+        )
+
+        if confirm == QMessageBox.Yes:
+            for cb in selected:
+                pkg = cb.objectName()
+                self.run_adb(f"pm uninstall {pkg}")
+                cb.setDisabled(True)
+                cb.setChecked(False)
+            self.status.setText(f"\ud83d\udcc9 {len(selected)} apps removidos.")
