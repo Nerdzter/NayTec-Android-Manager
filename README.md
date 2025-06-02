@@ -2,7 +2,7 @@
 
 🚀 Aplicativo Desktop moderno para gerenciamento avançado de dispositivos Android via ADB.
 
-> Desenvolvido com PyQt5 e inspirado no visual refinado do macOS, com foco em performance, segurança e experiência premium.
+> Estou desenvolvendo com PyQt5 e inspirado no visual refinado do macOS, com foco em performance, segurança e experiência premium.
 
 ---
 
@@ -43,21 +43,6 @@
 - psutil
 - pyqtgraph
 - ADB (Android Debug Bridge)
-
----
-
-## 📁 Estrutura
-
-NayTec-Android-Manager/
-├── controller/
-├── model/
-├── view/
-├── resources/
-│ ├── fonts/
-│ ├── icons/
-│ └── styles/
-├── main.py
-
 
 ---
 
