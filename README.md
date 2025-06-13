@@ -1,4 +1,4 @@
-# NayTec Android Manager
+# NayTec Android Manager ( Em aprimoramento )
 
 🚀 Aplicativo Desktop moderno para gerenciamento avançado de dispositivos Android via ADB.
 
