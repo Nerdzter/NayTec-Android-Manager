@@ -8,7 +8,7 @@
 
 ## 🎨 Interface
 
-- Estilo macOS com tema escuro (Dark Mode)
+- Estilo com tema escuro (Dark Mode)
 - Destaques neon: azul, verde e roxo
 - Fonte: SF Pro
 - Animações suaves e responsivas
